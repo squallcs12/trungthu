@@ -1,0 +1,125 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Chơi nhạc</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <!-- LOAD Tone.js from unpkg -->
+  <script src="https://unpkg.com/tone"></script>
+
+</head>
+<body>
+<h1>Rước đèn trung thu</h1>
+<button onclick="playNote()">Click me to play note!</button>
+<div id="lyric"></div>
+<strong id="activeWord"></strong>
+<script>
+  const notes = `
+      C5 8n 0.5 Tết
+      G4 8n 0.5 Trung
+      G4 8n 0.5 Thu
+      C5 8n 0.5 rước
+      E4 8n 0.5 đèn
+      F4 8n 0.5 đi
+      G4 8n 1 chơi.
+      G4 8n 0.5 Em
+      A4 8n 0.5 rước
+      E4 8n 0.5 đèn
+      F4 8n 0.5 đi
+      G4 8n 0.5 khắp
+      E4 8n 0.5 phố
+      C4 8n 1 phường.
+      E4 8n 0.5 Lòng
+      F4 8n 0.5 vui
+      G4 8n 0.5 sướng
+      A4 8n 0.5 với
+      E4 8n 0.5 đèn
+      F4 8n 0.5 trong
+      G4 8n 1 tay.
+      G4 8n 0.5 Em
+      A4 8n 0.5 múa
+      G4 8n 0.5 ca
+      F4 8n 0.5 trong
+      E4 8n 0.5 ánh
+      D4 8n 0.5 trăng
+      C4 8n 1 rằm.
+      C4 8n 0.5 Đèn
+      E4 8n 0.5 ông
+      E4 8n 0.5 sao
+      G4 8n 0.5 với
+      C4 8n 0.5 đèn
+      G4 8n 0.5 cá
+      G4 8n 1 chép.
+      E4 8n 0.5 Đèn
+      A4 8n 0.5 thiên
+      A4 8n 0.5 nga
+      C5 8n 0.5 với
+      G4 8n 0.5 đèn
+      D5 8n 0.5 bướm
+      D5 8n 1 bướm.
+      C5 8n 0.5 Em
+      D5 8n 0.5 rước
+      E4 8n 0.5 đèn
+      D4 8n 0.5 này
+      A4 8n 0.5 đến
+      G4 8n 0.5 cung
+      G4 8n 1 trăng.
+      E4 8n 0.5 Đèn
+      A4 8n 0.5 xanh
+      A4 8n 0.5 lam
+      C5 8n 0.5 với
+      G4 8n 0.5 đèn
+      D5 8n 0.5 trắng
+      D5 8n 1 nắng.
+      C5 8n 0.5 Trong
+      D5 8n 0.5 ánh
+      E4 8n 0.5 đèn
+      D4 8n 0.5 rực
+      A4 8n 0.5 rỡ
+      G4 8n 0.5 muôn
+      C4 8n 1 màu.
+      `;
+  const normalizeNotes = notes.replaceAll('’', '#');
+  // create a synth
+  const musicNotes = [];
+  let playTime = 0;
+  normalizeNotes.split('\n').map((x, index) => {
+    x = x.trim();
+    if (!x) {
+      return;
+    }
+    const [note, duration, time, text] = x.split(' ')
+    musicNotes.push({note, duration, time: playTime, text, index})
+    playTime += parseFloat(time);
+  });
+
+  musicNotes.map((note) => {
+    document.getElementById('lyric').innerHTML += (
+      `<span id='word-${note.index}'>${note.text}</span> `
+    );
+  })
+
+
+  const synth = new Tone.Synth().toDestination();
+  let started = false;
+
+  async function playNote() {
+    const now = Tone.now()
+    if (!started) {
+      await Tone.start();
+      started = true;
+    }
+    document.getElementById(`word-${musicNotes[musicNotes.length - 1].index}`).style.color = ''
+    const part = new Tone.Part(((time, value) => {
+      synth.triggerAttackRelease(value.note, value.duration, time);
+      document.getElementById(`word-${value.index}`).style.color = 'red'
+      if (value.index > musicNotes[0].index) {
+        document.getElementById(`word-${value.index - 1}`).style.color = ''
+      }
+    }), musicNotes);
+    Tone.Transport.start(now);
+    part.start(now);
+  }
+</script>
+</body>
+</html>
