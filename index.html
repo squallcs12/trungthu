@@ -11,9 +11,15 @@
 <body>
 <h1>Rước đèn trung thu</h1>
 <button onclick="playNote()">Click me to play note!</button>
+<button onclick="off()">Off</button>
 <div id="lyric"></div>
 <strong id="activeWord"></strong>
 <script>
+  function off () {
+    Object.values(widgetActions).map((action) => {
+      eraWidget.triggerAction(action.action, null, {value: 0}, true);
+    });
+  }
   const notes = `
       C5 8n 0.5 Tết
       G4 8n 0.5 Trung
@@ -93,6 +99,10 @@
     playTime += parseFloat(time);
   });
 
+  musicNotes.map((note, index) => {
+    note.index = index;
+  })
+
   musicNotes.map((note) => {
     document.getElementById('lyric').innerHTML += (
       `<span id='word-${note.index}'>${note.text}</span> `
@@ -104,7 +114,9 @@
   let started = false;
 
   async function playNote() {
-    const now = Tone.now()
+    Object.values(widgetActions).map((action) => {
+      eraWidget.triggerAction(action.action, null, {value: 0}, true);
+    });
     if (!started) {
       await Tone.start();
       started = true;
@@ -112,14 +124,18 @@
     document.getElementById(`word-${musicNotes[musicNotes.length - 1].index}`).style.color = ''
     const part = new Tone.Part(((time, value) => {
       synth.triggerAttackRelease(value.note, value.duration, time);
-      const noteLetter = value.note[0];
-      const action = widgetActions[noteLetter];
-      eraWidget.triggerAction(action.action, null, null, true);
-      document.getElementById(`word-${value.index}`).style.color = 'red'
       if (value.index > musicNotes[0].index) {
         document.getElementById(`word-${value.index - 1}`).style.color = ''
+
+        const previousNote = musicNotes[value.index -1]
+        eraWidget.triggerAction(widgetActions[previousNote.note[0]].action, null, {value: 0}, true);
       }
+      const noteLetter = value.note[0];
+      const action = widgetActions[noteLetter];
+      eraWidget.triggerAction(action.action, null, {value: 1}, true);
+      document.getElementById(`word-${value.index}`).style.color = 'red'
     }), musicNotes);
+    const now = Tone.now()
     Tone.Transport.start(now);
     part.start(now);
   }
@@ -136,7 +152,8 @@
       configuration.actions.map((action, index) => {
         widgetActions[noteLetter[index]] = action;
       })
-    }
+    },
+    mobileHeight: 250,
   });
 </script>
 </body>
